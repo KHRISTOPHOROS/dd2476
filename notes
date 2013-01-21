@@ -1,0 +1,44 @@
+BOOLEAN RETRIEVAL
+    term-document incidence matrix                      <---- TOO NAIVE - NOT PRACTICALL - MEMORY OVERFLOW ----> SOLUTION: INVERTED INDEX
+            DOC1    DOC2    DOC3    DOC4...
+       TERM1 1       0       1       0
+       TERM2 0       0       1       0
+       TERM3 1       1       0       0
+       TERM4 1       1       0       1
+
+       TERM1 AND TERM2 NOT TERM3:
+       1010  AND 0010  AND 0011     =   0110
+
+INVERTED INDEX
+    Dictionary of terms. Each term has list with pointers to documents it occurs in. "Postings".
+    1. COLLECT DOCUMENTS
+    2. TOKENIZE TEXT - turn texts into lists of tokens, ie remove .,"/- space and shit
+    3. LINGUISTIC PREPROCESSING - normalize tokens. "wizards" = "wizard"
+    4. CREATE DICTIONARY AND POSTINGS
+
+    TERM1 - |DOC3|DOC4|DOC8|DOC72|
+    TERM2 - |DOC1|DOC8|
+    TERM3 - |DOC7|DOC32|DOC54|DOC102|
+    TERM4 - |DOC4|DOC5|DOC9|
+    ...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+INFORMATION NEED
+    what the user needs
+
+QUERY
+    what the user tells the computer to search for
