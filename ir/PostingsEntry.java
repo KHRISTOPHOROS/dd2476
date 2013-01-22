@@ -23,11 +23,17 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
      *  descending order.
      */
     public int compareTo( PostingsEntry other ) {
-	return Double.compare( other.score, score );
+        return Double.compare( other.score, score );
     }
 
     //
     //  YOUR CODE HERE
+    //
+    public PostingsEntry(int docIDIn){
+        docID = docIDIn;
+    }
+    //
+    //  YOUR CODE THERE
     //
 
 }

@@ -30,6 +30,7 @@ public class HashedIndex implements Index {
 	//
 	//  YOUR CODE HERE
 	//
+       
     }
 
 
