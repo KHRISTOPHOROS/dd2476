@@ -30,7 +30,12 @@ public class HashedIndex implements Index {
 	//
 	//  YOUR CODE HERE
 	//
-       
+        if(index.get(token) == null){
+            index.put(token,new PostingsList(new PostingsEntry(docID)));
+        }
+        else{
+           // (index.get(token)).add(new PostingsEntry(docID));
+        }
     }
 
 
@@ -42,7 +47,7 @@ public class HashedIndex implements Index {
 	// 
 	//  REPLACE THE STATEMENT BELOW WITH YOUR CODE
 	//
-	return null;
+        return null; 
     }
 
 
@@ -53,7 +58,8 @@ public class HashedIndex implements Index {
 	// 
 	//  REPLACE THE STATEMENT BELOW WITH YOUR CODE
 	//
-	return null;
+        System.out.println("NU SOEKS DET LOLOL");
+        return null;
     }
 
 

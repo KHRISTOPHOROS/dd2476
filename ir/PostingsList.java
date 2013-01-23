@@ -34,26 +34,39 @@ public class PostingsList implements Serializable {
     //  YOUR CODE HERE
     //
     public PostingsList(){
-        System.out.println("PostingsList: Created!");
+        //System.out.println("PostingsList: Created! WITHOUT INPUT");
+    }
+    public PostingsList(PostingsEntry entryIn){
+        //System.out.println("PostingsList: Created!");
+        list.add(entryIn);
     }
 
     //SHOULD ADD PostingsEntry AT POSITION ACCORDING TO docID
     public void add(PostingsEntry entryIn){
-        System.out.println("PostingsList: Entry added!");
-
+       // System.out.println("PostingsList: Entry added!");
         for(int i=0;i<list.size();i++){
-            if(entryIn.dockID == i){
+            if(entryIn.docID == (list.get(i)).docID){
+                break;
+                //INCREASE FREQUENCY?
+            }
+            if(entryIn.docID < (list.get(i)).docID){        // IF SMALLER THAN -> INSERT
+                list.add(i,entryIn);
                 break;
             }
-            if(entryIn.docID > i){
-                list.add(i,entryIn);
+            if(entryIn.docID > (list.get(i)).docID){        // IF LARGER THAN
+                if(i==list.size()-1){
+                    list.add(entryIn);
+                    break;
+                }
+                if(entryIn.docID < (list.get(i+1)).docID){  // IF SMALLER THAN -> INSERT
+                    list.add(i+1,entryIn);
+                }
             }
         }
+    }
 
     //
     //  YOUR CODE THERE
     //
 }
-	
 
-			   
