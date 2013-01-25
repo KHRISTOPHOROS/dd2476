@@ -9,11 +9,13 @@
 package ir;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     
     public int docID;
     public double score;
+    public ArrayList<Integer> positions = new ArrayList<Integer>();
 
     /**
      *  PostingsEntries are compared by their score (only relevant 
@@ -29,8 +31,13 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     //
     //  YOUR CODE HERE
     //
-    public PostingsEntry(int docIDIn){
+    public PostingsEntry(int docIDIn, int positionIn){
         docID = docIDIn;
+        positions.add(positionIn);
+    }
+
+    public void addPosition(int positionIn){
+        positions.add(positionIn);
     }
     //
     //  YOUR CODE THERE

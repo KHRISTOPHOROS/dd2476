@@ -12,7 +12,7 @@ package ir;
 
 import java.util.LinkedList;
 import java.util.HashMap;
-
+import java.util.ArrayList;
 
 /**
  *   Implements an inverted index as a Hashtable from words to PostingsLists.
@@ -31,10 +31,10 @@ public class HashedIndex implements Index {
 	//  YOUR CODE HERE
 	//
         if(index.get(token) == null){
-            index.put(token,new PostingsList(new PostingsEntry(docID)));
+            index.put(token,new PostingsList(new PostingsEntry(docID,offset)));
         }
         else{
-           // (index.get(token)).add(new PostingsEntry(docID));
+            (index.get(token)).add(new PostingsEntry(docID,offset));
         }
     }
 
@@ -47,7 +47,7 @@ public class HashedIndex implements Index {
 	// 
 	//  REPLACE THE STATEMENT BELOW WITH YOUR CODE
 	//
-        return null; 
+        return index.get(token);
     }
 
 
@@ -58,10 +58,160 @@ public class HashedIndex implements Index {
 	// 
 	//  REPLACE THE STATEMENT BELOW WITH YOUR CODE
 	//
-        System.out.println("NU SOEKS DET LOLOL");
+        int nrOfTerms = query.terms.size();
+        ArrayList<PostingsList> postLists = new ArrayList<PostingsList>();
+
+        //GET PostingsLists for each term
+        for(int i=0;i<nrOfTerms;i++){
+            String tempToken = query.terms.get(i);
+            if(index.get(tempToken) != null){
+                postLists.add(index.get(tempToken));
+            }
+        }
+
+        if(queryType == Index.PHRASE_QUERY){                       //PHRASE QUERY
+            System.out.println("PHRASE QUERT");
+
+            return intersectPhrase(intersect(postLists));
+        }
+        else if(queryType == Index.INTERSECTION_QUERY){                 //INTERSECTION QUERY
+            if(nrOfTerms == 1){
+                String token1 = query.terms.get(0);
+                PostingsList hitList = index.get(token1);
+                return hitList;
+            }
+
+            return intersect(postLists);
+        }
+
+        System.out.println("RETURN OF NULL WAS REACHED!");
         return null;
     }
 
+    public PostingsList intersect(ArrayList<PostingsList> postListsIn){
+        PostingsList postingsOut = new PostingsList();                  //THE POSTINGS TO RETURN
+
+        int nrOfPointers = postListsIn.size();
+        ArrayList<Integer> pointers = new ArrayList<Integer>();         //LIST FOR TRACKING POINTERS
+        for(int i=0;i<nrOfPointers;i++){                                //ALL OF THEM 0 INITIALLY
+            pointers.add(0);
+        }
+
+        //ALGORITHM FROM BOOK
+        while(true){
+            System.out.println("STARTING LOOP");
+            int correctDocID = ((postListsIn.get(0)).get(pointers.get(0))).docID;
+            int nrOfHits = 0;
+            for(int i=0;i<pointers.size();i++){     //FOR ALL POSTLISTS AND THEIR POINTER, GET DocID
+                if(((postListsIn.get(i)).get(pointers.get(i))).docID == correctDocID){  //IF CORRECT
+                    nrOfHits++;                                         //INCREASE NR OF HITS
+                }
+            }
+            if(nrOfHits == nrOfPointers){                               //IF DOCUMENT HAS ALL WORDS
+                nrOfHits = 0;           // NO NEED
+                System.out.println("ADDING");
+                postingsOut.add((postListsIn.get(0)).get(pointers.get(0)));
+                System.out.println("SIZE AFTER ADD: "+postingsOut.size());
+
+                if(pointersAtEnd(pointers,postListsIn,nrOfPointers)){
+                    break;
+                }
+
+                for(int i=0;i<nrOfPointers;i++){                        //FOR ALL POINTERS
+                    if(pointers.get(i) < (postListsIn.get(i)).size()-1){//IF NOT AT LAST POSITION
+                        pointers.set(i,pointers.get(i)+1);              //ADVANCE POINTER
+                    }
+                }
+            }
+            else{
+                int minPointer = 0;
+                int minValue = ((postListsIn.get(0)).get(pointers.get(0))).docID;
+                boolean lowFound = false;
+
+                for(int i=0;i<nrOfPointers;i++){
+                    if(pointers.get(i) < (postListsIn.get(i)).size()-1) { //NOT LAST
+                        if(lowFound==false){                            //NO POINTER IS CHOSEN
+                            lowFound=true;                              //PICK ONE
+                            minPointer = i;
+                            minValue = ((postListsIn.get(i)).get(pointers.get(i))).docID;
+                        }
+                        else{                                           //IF ANOTHER ALREADY CHOSEN
+                            if(((postListsIn.get(i)).get(pointers.get(i))).docID < minValue){//LOWER
+                                minPointer = i;                         //PICK THIS ONE
+                                minValue = ((postListsIn.get(i)).get(pointers.get(i))).docID;
+                            }
+                        }
+                    }
+                }                  
+
+                if(lowFound){           //NOW THE LOWEST POINTER THAT CAN BE INCREMENTED HAS BEEN FOUND
+                    pointers.set(minPointer, pointers.get(minPointer)+1);//INCREASE LOWEST POINTER
+                }
+                else{                   //NO INCREMENTABLE POINTER WAS FOUND
+                    break;              //NOTHING MORE TO DO HERE - BREAK
+                }
+            }
+        }
+
+        return postingsOut;
+    }
+
+    public PostingsList intersectPhrase(ArrayList<PostingsList> termsIn){
+        PostingsList output = new PostingsList();
+        int nrOfTerms = termsIn.size();
+        int nrOfDocs = (termsIn.get(0)).size();
+        PostingsList term0 = termsIn.get(0);                        //FOR THE FIRST TERM
+
+        for(int i=0;i<nrOfDocs;i++){                                //FOR ALL DOCUMENTS
+            PostingsEntry tempDoc0 = term0.get(i);                  //THE DOCUMENT TO ANALYZE
+            boolean foundPhrase = false;
+
+            for(int j=0;j<tempDoc0.positions.size();j++){           //FOR ALL POSITIONS FOR FIRST TERM
+                int tempPos0 = (tempDoc0.positions).get(j);         //THE POSITION TO ANALYZE
+                if(foundPhrase){ break; }                           //IF PHRASE IS FOUND, NEXT DOC
+
+                for(int k=1;k<nrOfTerms;k++){                       //FOR ALL OTHER TERMS
+                    PostingsList termk = termsIn.get(k);            //ANOTHER TERM TO ANALYZE
+
+                    PostingsEntry tempDoc = termk.get(i);           //SAME DOCUMENT TO ANALYZE
+
+                    if(!hasInteger(tempPos0+k,tempDoc.positions)){  //DOCUMENT DOES NOT HAVE PHRASE
+                        break;
+                    }
+                    if(k==nrOfTerms-1){                             //ALL TERMS WERE CORRECTLY PLACED
+                        foundPhrase = true;                         //PHRASE IS FOUND
+                        output.add(tempDoc);                        //ADD DOCUMENT TO ANSWER
+                    }
+                }
+            }
+        }
+    return output;
+    }
+
+    public boolean hasInteger(int targetIn, ArrayList<Integer> listIn){
+        int size = listIn.size();
+        for(int i=0;i<size;i++){
+            if(listIn.get(i) == targetIn){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean pointersAtEnd(ArrayList<Integer> pointersIn, ArrayList<PostingsList> postListsIn, int nrOfPointersIn){
+        int nrOfPointersEqualsBreak = 0;
+        for(int i=0;i<nrOfPointersIn;i++){                            //FOR ALL POINTERS
+            if(pointersIn.get(i) == (postListsIn.get(i)).size()-1){   //IF POINTER AT LAST POSITION
+                nrOfPointersEqualsBreak++;                            //INCREASE THE BREAKVALUE
+            }
+        }
+        if(nrOfPointersEqualsBreak == pointersIn.size()){             //IF BREAKVALUE HIGH - BREAK
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
 
     /**
      *  No need for cleanup in a HashedIndex.

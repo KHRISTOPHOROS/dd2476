@@ -19,7 +19,6 @@ public class PostingsList implements Serializable {
     /** The postings list as a linked list. */
     private LinkedList<PostingsEntry> list = new LinkedList<PostingsEntry>();
 
-
     /**  Number of postings in this list  */
     public int size() {
         return list.size();
@@ -44,7 +43,7 @@ public class PostingsList implements Serializable {
     //SHOULD ADD PostingsEntry AT POSITION ACCORDING TO docID
     public void add(PostingsEntry entryIn){
        // System.out.println("PostingsList: Entry added!");
-        for(int i=0;i<list.size();i++){
+        for(int i=0;i<list.size();i++){                     // USE ARRAYLIST OF BOOLEANS INSTEAD!!
             if(entryIn.docID == (list.get(i)).docID){
                 break;
                 //INCREASE FREQUENCY?
@@ -53,15 +52,20 @@ public class PostingsList implements Serializable {
                 list.add(i,entryIn);
                 break;
             }
-            if(entryIn.docID > (list.get(i)).docID){        // IF LARGER THAN
+            else{
+            //if(entryIn.docID > (list.get(i)).docID){        // IF LARGER THAN
                 if(i==list.size()-1){
                     list.add(entryIn);
                     break;
                 }
                 if(entryIn.docID < (list.get(i+1)).docID){  // IF SMALLER THAN -> INSERT
                     list.add(i+1,entryIn);
+                    break;
                 }
             }
+        }
+        if(list.size() == 0){
+            list.add(entryIn);
         }
     }
 
