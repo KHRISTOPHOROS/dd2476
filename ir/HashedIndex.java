@@ -70,7 +70,11 @@ public class HashedIndex implements Index {
         }
 
         if(queryType == Index.PHRASE_QUERY){                       //PHRASE QUERY
-            System.out.println("PHRASE QUERT");
+            if(nrOfTerms == 1){
+                String token1 = query.terms.get(0);
+                PostingsList hitList = index.get(token1);
+                return hitList;
+            }
 
             return intersectPhrase(intersect(postLists));
         }
@@ -81,17 +85,22 @@ public class HashedIndex implements Index {
                 return hitList;
             }
 
-            return intersect(postLists);
+            return intersect(postLists).get(0);
         }
 
         System.out.println("RETURN OF NULL WAS REACHED!");
         return null;
     }
 
-    public PostingsList intersect(ArrayList<PostingsList> postListsIn){
-        PostingsList postingsOut = new PostingsList();                  //THE POSTINGS TO RETURN
-
+    public ArrayList<PostingsList> intersect(ArrayList<PostingsList> postListsIn){
+        //PostingsList postingsOut = new PostingsList();                  //THE POSTINGS TO RETURN
         int nrOfPointers = postListsIn.size();
+
+        ArrayList<PostingsList> output = new ArrayList<PostingsList>(); //NEW
+        for(int i=0;i<nrOfPointers;i++){                                //NEW
+            output.add(new PostingsList());                             //NEW
+        }
+
         ArrayList<Integer> pointers = new ArrayList<Integer>();         //LIST FOR TRACKING POINTERS
         for(int i=0;i<nrOfPointers;i++){                                //ALL OF THEM 0 INITIALLY
             pointers.add(0);
@@ -109,9 +118,11 @@ public class HashedIndex implements Index {
             }
             if(nrOfHits == nrOfPointers){                               //IF DOCUMENT HAS ALL WORDS
                 nrOfHits = 0;           // NO NEED
-                System.out.println("ADDING");
-                postingsOut.add((postListsIn.get(0)).get(pointers.get(0)));
-                System.out.println("SIZE AFTER ADD: "+postingsOut.size());
+                //postingsOut.add((postListsIn.get(0)).get(pointers.get(0)));
+
+                for(int k=0;k<nrOfPointers;k++){                                        //NEW
+                    (output.get(k)).add((postListsIn.get(k)).get(pointers.get(k)));     //NEW
+                }                                                                       //NEW
 
                 if(pointersAtEnd(pointers,postListsIn,nrOfPointers)){
                     break;
@@ -153,7 +164,7 @@ public class HashedIndex implements Index {
             }
         }
 
-        return postingsOut;
+        return output;
     }
 
     public PostingsList intersectPhrase(ArrayList<PostingsList> termsIn){

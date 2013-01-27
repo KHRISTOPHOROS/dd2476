@@ -1,0 +1,3 @@
+clear
+javac -Xlint:none -cp .:pdfbox:megamap ir/*.java
+java -Xmx1024m -cp .:pdfbox:megamap ir.SearchGUI -d svwiki/files/1000 -m

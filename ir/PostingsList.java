@@ -44,11 +44,13 @@ public class PostingsList implements Serializable {
     public void add(PostingsEntry entryIn){
        // System.out.println("PostingsList: Entry added!");
         for(int i=0;i<list.size();i++){                     // USE ARRAYLIST OF BOOLEANS INSTEAD!!
-            if(entryIn.docID == (list.get(i)).docID){
+            int tempDocID = (list.get(i)).docID;
+            if(entryIn.docID == tempDocID){
+                (list.get(i)).addPosition((entryIn.positions).get(0)); //ADD WORDPOSITION TO DOCUMENT
                 break;
                 //INCREASE FREQUENCY?
             }
-            if(entryIn.docID < (list.get(i)).docID){        // IF SMALLER THAN -> INSERT
+            if(entryIn.docID < tempDocID){        // IF SMALLER THAN -> INSERT
                 list.add(i,entryIn);
                 break;
             }
