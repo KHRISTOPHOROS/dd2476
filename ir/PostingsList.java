@@ -86,10 +86,13 @@ public class PostingsList implements Serializable {
                 return;
             }
         }
-
+//System.out.println("SIZE: "+list.size());
         Pointer pointer = new Pointer(list.size());
+//System.out.println("VALUE: "+pointer.value);
 
         while(true){
+//        System.out.println("BAJSKORV");
+//        System.out.println("listsize: "+list.size());
             if(entryIn.docID == list.get(pointer.value-1).docID){           //IF POINTING AT SAME DOCUMENT
                 (list.get(pointer.value-1)).addPosition((entryIn.positions).get(0));
                 break;
@@ -101,6 +104,10 @@ public class PostingsList implements Serializable {
                 }
                 else{                                                       //IF LARGER THAN FIRST
                  //   list.add(1,entryIn);
+                    if(entryIn.docID < list.get(1).docID){
+                        list.add(1,entryIn);
+                        break;
+                    }
                     pointer.right();                                        //GO RIGHT
                  //   break;
                 }
@@ -113,14 +120,26 @@ public class PostingsList implements Serializable {
                 else{                                                       //IF SMALLER THAN LAST
                    // list.add(list.size()-1,entryIn);
                    // break;
+                   if(entryIn.docID > list.get(list.size()-2).docID){
+                        list.add(list.size()-2,entryIn);
+                        break;
+                   }
                    pointer.left();                                          //GO LEFT
                 }
             }
             else{// if(pointer.value-1 != 0 && pointer.value-1 != list.size()-1){   //IF POINTER != FIRST/LAST
                 if(entryIn.docID < list.get(pointer.value-1).docID){        //IF SMALLER THAN POINTED
+                    if(entryIn.docID > list.get(pointer.value-2).docID){
+                        list.add(pointer.value-1,entryIn);
+                        break;
+                    }
                     pointer.left();                                         //LEFT
                 }
                 else{                                                       //IF LARGER THAN POINTED
+                    if(entryIn.docID < list.get(pointer.value).docID){
+                        list.add(pointer.value,entryIn);
+                        break;
+                    }
                     pointer.right();                                        //RIGHT
                 }
             }
@@ -140,21 +159,36 @@ public class PostingsList implements Serializable {
             startValue = listSizeIn/2;
             nrOfJumps = 1;
             listSize = listSizeIn;
+            jump = value/2;
         }
 
         public void right(){
-            if(value>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
-            if(value<1){ value = 1; }
-            if(jump<1){ jump = 1; }
+            setNextJump();
             value = value+jump;
+   //     System.out.println("jump: "+jump);
+   //     System.out.println("value: "+value);
             nrOfJumps++;
+            //if(value>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
+            //if(value<1){ value = 1; }
+            //if(jump<1){ jump = 1; }
+            //value = value+jump;
+            //nrOfJumps++;
         }
         public void left(){
-            if(value>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
-            if(value<1){ value = 1; }
-            if(jump<1){ jump = 1; }
+            setNextJump();
             value = value-jump;
+  //      System.out.println("jump: "+jump);
+ //       System.out.println("value: "+value);
             nrOfJumps++;
+            //if(value>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
+            //if(value<1){ value = 1; }
+            //if(jump<1){ jump = 1; }
+            //value = value-jump;
+            //nrOfJumps++;
+        }
+        public void setNextJump(){
+            if(jump>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
+            if(jump<1){ jump = 1; }
         }
     }
     //

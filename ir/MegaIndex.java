@@ -186,7 +186,7 @@ public class MegaIndex implements Index {
                 index.put(token,new PostingsList(new PostingsEntry(docID,offset)));
             }
 
-        }catch(Exception e){ System.out.println("MEGAMAP EXCEPTION1"); }
+        }catch(Exception e){ e.printStackTrace(); } //System.out.println("MEGAMAP EXCEPTION1"); }
     }
 
 
