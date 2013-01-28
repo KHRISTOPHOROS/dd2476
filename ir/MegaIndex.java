@@ -144,17 +144,22 @@ public class MegaIndex implements Index {
                 offset++;
                 String token = it.next();                                   //PARTICULAR KEY
                 //output.put(token,indexes[i].get(token));    //GET VALUE FROM MegaMap AND PUT IN OUTPUT
-                PostingsList stealFrom = (PostingsList)(indexes[i].get(token));
-                if(output.hasKey(token)){
-                    PostingsList giveTo = (PostingsList)(output.get(token));
-                    
-                    for(int j=0;j<stealFrom.size();j++){
-                        //giveTo.add(stealFrom.get(j));
-                        giveTo.add(new PostingsEntry(i,offset));
+                //PostingsList stealFrom = (PostingsList)(MegaMap)(indexes[i].get(token));
+                //System.out.println("BASJKASTERELOF "+indexes[i].getClass());
+                //System.out.println("BAJSKASTARELOF2 "+indexes[i].get(token).getClass());
+                if(indexes[i].get(token) instanceof PostingsList){
+
+                    PostingsList stealFrom = (PostingsList)(indexes[i].get(token));
+                    if(output.hasKey(token)){
+                        PostingsList giveTo = (PostingsList)(output.get(token));
+                        
+                        for(int j=0;j<stealFrom.size();j++){
+                            giveTo.add(stealFrom.get(j));
+                        }
                     }
-                }
-                else{
-                    output.put(token,stealFrom);
+                    else{
+                        output.put(token,(indexes[i].get(token)));
+                    }
                 }
             }
         }
