@@ -16,7 +16,7 @@ import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.ArrayList;
-
+import java.util.Iterator;
 
 public class MegaIndex implements Index {
 
@@ -58,36 +58,36 @@ public class MegaIndex implements Index {
      */
     public MegaIndex( LinkedList<String> indexfiles ) {
 	try {
-	    manager = MegaMapManager.getMegaMapManager();
-	    if ( indexfiles.size() == 0 ) {
-		// No index file names specified. Construct a new index and
-		// invent a name for it.
-		index = manager.createMegaMap( generateFilename(), path, true, false );
-		
-	    }
-	    else if ( indexfiles.size() == 1 ) {
-		// Read the specified index from file
-		index = manager.createMegaMap( indexfiles.get(0), path, true, false );
-		HashMap<String,String> m = (HashMap<String,String>)index.get( "..docIDs" );
-		if ( m == null ) {
-		    System.err.println( "Couldn't retrieve the associations between docIDs and document names" );
-		}
-		else {
-		    docIDs.putAll( m );
-		}
-	    }
-	    else {
-		// Merge the specified index files into a large index.
-		MegaMap[] indexesToBeMerged = new MegaMap[indexfiles.size()];
-		for ( int k=0; k<indexfiles.size(); k++ ) {
-		    System.err.println( indexfiles.get(k) );
-		    indexesToBeMerged[k] = manager.createMegaMap( indexfiles.get(k), path, true, false );
-		}
-		index = merge( indexesToBeMerged );
-		for ( int k=0; k<indexfiles.size(); k++ ) {
-		    manager.removeMegaMap( indexfiles.get(k) );
-		}
-	    }
+        manager = MegaMapManager.getMegaMapManager();
+        if ( indexfiles.size() == 0 ) {
+            // No index file names specified. Construct a new index and
+            // invent a name for it.
+            index = manager.createMegaMap( generateFilename(), path, true, false );
+    
+        }
+        else if ( indexfiles.size() == 1 ) {
+            // Read the specified index from file
+            index = manager.createMegaMap( indexfiles.get(0), path, true, false );
+            HashMap<String,String> m = (HashMap<String,String>)index.get( "..docIDs" );
+            if ( m == null ) {
+                System.err.println( "Couldn't retrieve the associations between docIDs and document names" );
+            }
+            else {
+                docIDs.putAll( m );
+            }
+        }
+        else {
+            // Merge the specified index files into a large index.
+            MegaMap[] indexesToBeMerged = new MegaMap[indexfiles.size()];
+            for ( int k=0; k<indexfiles.size(); k++ ) {
+                System.err.println( indexfiles.get(k) );
+                indexesToBeMerged[k] = manager.createMegaMap( indexfiles.get(k), path, true, false );
+            }
+            index = merge( indexesToBeMerged );
+            for ( int k=0; k<indexfiles.size(); k++ ) {
+                manager.removeMegaMap( indexfiles.get(k) );
+            }
+        }
 	}
 	catch ( Exception e ) {
 	    e.printStackTrace();
@@ -130,18 +130,38 @@ public class MegaIndex implements Index {
     /**
      *  Merges several indexes into one.
      */
-    MegaMap merge( MegaMap[] indexes ) {
+    MegaMap merge( MegaMap[] indexes ) {                                                                                    ///////////////HNJYA/////////////////
 	try {
-	    MegaMap res = manager.createMegaMap( generateFilename(), path, true, false );
+	    MegaMap output = manager.createMegaMap( generateFilename(), path, true, false );
 	    //
 	    //  YOUR CODE HERE
 	    //
-	    return res;
-	}
-	catch ( Exception e ) {
-	    e.printStackTrace();
-	    return null;
-	}
+        for(int i=0;i<indexes.length;i++){                                  //FOR ALL MegaMaps
+            Set<String> tokens = indexes[i].getKeys();                      //GET CURRENT MegaMaps KEYS
+            
+            int offset = -1;
+            for(Iterator<String> it = tokens.iterator(); it.hasNext(); ){   //FOR ALL KEYS
+                offset++;
+                String token = it.next();                                   //PARTICULAR KEY
+                //output.put(token,indexes[i].get(token));    //GET VALUE FROM MegaMap AND PUT IN OUTPUT
+                PostingsList stealFrom = (PostingsList)(indexes[i].get(token));
+                if(output.hasKey(token)){
+                    PostingsList giveTo = (PostingsList)(output.get(token));
+                    
+                    for(int j=0;j<stealFrom.size();j++){
+                        //giveTo.add(stealFrom.get(j));
+                        giveTo.add(new PostingsEntry(i,offset));
+                    }
+                }
+                else{
+                    output.put(token,stealFrom);
+                }
+            }
+        }
+
+	    return output;
+
+	}catch ( Exception e ) { e.printStackTrace(); return null; }
     }
 
     /**
@@ -151,12 +171,17 @@ public class MegaIndex implements Index {
 	//
 	//  COPY THE CODE FROM YOUR HashedIndex CLASS HERE
 	//
-        if((index.get(token)) == null){
-            index.put(token,new PostingsList(new PostingsEntry(docID,offset)));
-        }
-        else{
-            ((PostingsList)index.get(token)).add(new PostingsEntry(docID,offset));
-        }
+        try{
+
+            if(index.hasKey(token)){
+                PostingsList tempList = (PostingsList)(index.get(token));
+                ((PostingsList)(index.get(token))).add(new PostingsEntry(docID,offset));
+            }
+            else{
+                index.put(token,new PostingsList(new PostingsEntry(docID,offset)));
+            }
+
+        }catch(Exception e){ System.out.println("MEGAMAP EXCEPTION1"); }
     }
 
 
@@ -165,7 +190,7 @@ public class MegaIndex implements Index {
      *  if the term is not in the index.
      */
     public PostingsList getPostings( String token ) {
-	try {
+	try{
 	    return (PostingsList)index.get( token );
 	}
 	catch( Exception e ) {
@@ -184,6 +209,7 @@ public class MegaIndex implements Index {
 	//
         int nrOfTerms = query.terms.size();
         ArrayList<PostingsList> postLists = new ArrayList<PostingsList>();
+        try{
 
         //GET PostingsLists for each term
         for(int i=0;i<nrOfTerms;i++){
@@ -196,7 +222,7 @@ public class MegaIndex implements Index {
         if(queryType == Index.PHRASE_QUERY){                       //PHRASE QUERY
             if(nrOfTerms == 1){
                 String token1 = query.terms.get(0);
-                PostingsList hitList = (PostingsList)index.get(token1);
+                PostingsList hitList = (PostingsList)index.get(token1);                         //BATMAN
                 return hitList;
             }
 
@@ -205,12 +231,14 @@ public class MegaIndex implements Index {
         else if(queryType == Index.INTERSECTION_QUERY){                 //INTERSECTION QUERY
             if(nrOfTerms == 1){
                 String token1 = query.terms.get(0);
-                PostingsList hitList = (PostingsList)(index.get(token1));
+                PostingsList hitList = (PostingsList)(index.get(token1));                       //BATMAN
                 return hitList;
             }
 
             return intersect(postLists).get(0);
         }
+
+        }catch(Exception e){ System.out.println("MEGAMAP EXCEPTION2"); }
 
         System.out.println("RETURN OF NULL WAS REACHED!");
         return null;
@@ -232,7 +260,6 @@ public class MegaIndex implements Index {
 
         //ALGORITHM FROM BOOK
         while(true){
-            System.out.println("STARTING LOOP");
             int correctDocID = ((postListsIn.get(0)).get(pointers.get(0))).docID;
             int nrOfHits = 0;
             for(int i=0;i<pointers.size();i++){     //FOR ALL POSTLISTS AND THEIR POINTER, GET DocID
