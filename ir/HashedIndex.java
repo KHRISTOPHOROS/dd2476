@@ -18,7 +18,7 @@ import java.util.ArrayList;
  *   Implements an inverted index as a Hashtable from words to PostingsLists.
  */
 public class HashedIndex implements Index {
-
+    public int iterations=0;
     /** The index as a hashtable. */
     private HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
 
@@ -108,7 +108,6 @@ public class HashedIndex implements Index {
 
         //ALGORITHM FROM BOOK
         while(true){
-            System.out.println("STARTING LOOP");
             int correctDocID = ((postListsIn.get(0)).get(pointers.get(0))).docID;
             int nrOfHits = 0;
             for(int i=0;i<pointers.size();i++){     //FOR ALL POSTLISTS AND THEIR POINTER, GET DocID
@@ -171,6 +170,7 @@ public class HashedIndex implements Index {
         PostingsList output = new PostingsList();
         int nrOfTerms = termsIn.size();
         int nrOfDocs = (termsIn.get(0)).size();
+        int[] pointers = new int[nrOfTerms];
         PostingsList term0 = termsIn.get(0);                        //FOR THE FIRST TERM
 
         for(int i=0;i<nrOfDocs;i++){                                //FOR ALL DOCUMENTS
@@ -186,7 +186,7 @@ public class HashedIndex implements Index {
 
                     PostingsEntry tempDoc = termk.get(i);           //SAME DOCUMENT TO ANALYZE
 
-                    if(!hasInteger(tempPos0+k,tempDoc.positions)){  //DOCUMENT DOES NOT HAVE PHRASE
+                    if(!hasInteger(tempPos0+k,tempDoc.positions,pointers,k)){  //DOCUMENT DOES NOT HAVE PHRASE
                         break;
                     }
                     if(k==nrOfTerms-1){                             //ALL TERMS WERE CORRECTLY PLACED
@@ -195,18 +195,33 @@ public class HashedIndex implements Index {
                     }
                 }
             }
+            pointers = resetPointers(pointers);                     //RESET POINTERS FOR NEXT DOCUMENTCHECK
         }
     return output;
     }
 
-    public boolean hasInteger(int targetIn, ArrayList<Integer> listIn){
+    public boolean hasInteger(int targetIn, ArrayList<Integer> listIn, int[] pointers, int pointer){
         int size = listIn.size();
-        for(int i=0;i<size;i++){
+        for(int i=pointers[pointer];i<size;i++){                                                            //BORJA FROM NOLL = NO PROBLEM
+iterations++;
+System.out.println("ITERATIONS: "+iterations);
             if(listIn.get(i) == targetIn){
+                pointers[pointer] = i;          //NEW
                 return true;
             }
+            if(listIn.get(i) > targetIn){       //NEW
+                pointers[pointer] = i;          //NEW
+                return false;                   //NEW
+            }                                   //NEW
         }
         return false;
+    }
+    public int[] resetPointers(int[] pointersIn){
+        int[] pointersOut = pointersIn;
+        for(int i=0;i<pointersIn.length;i++){
+            pointersOut[i] = 0;
+        }
+        return pointersOut;
     }
 
     public boolean pointersAtEnd(ArrayList<Integer> pointersIn, ArrayList<PostingsList> postListsIn, int nrOfPointersIn){
