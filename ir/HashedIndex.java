@@ -18,7 +18,6 @@ import java.util.ArrayList;
  *   Implements an inverted index as a Hashtable from words to PostingsLists.
  */
 public class HashedIndex implements Index {
-    public int iterations=0;
     /** The index as a hashtable. */
     private HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
 
@@ -61,7 +60,7 @@ public class HashedIndex implements Index {
         int nrOfTerms = query.terms.size();
         ArrayList<PostingsList> postLists = new ArrayList<PostingsList>();
 
-        //GET PostingsLists for each term
+                                                                        //GET PostingsLists for each term
         for(int i=0;i<nrOfTerms;i++){
             String tempToken = query.terms.get(i);
             if(index.get(tempToken) != null){
@@ -69,19 +68,19 @@ public class HashedIndex implements Index {
             }
         }
 
-        if(queryType == Index.PHRASE_QUERY){                       //PHRASE QUERY
-            if(nrOfTerms == 1){
+        if(queryType == Index.PHRASE_QUERY){                            //PHRASE QUERY
+            if(nrOfTerms == 1){                                         //IF ONE TERM
                 String token1 = query.terms.get(0);
-                PostingsList hitList = index.get(token1);
+                PostingsList hitList = index.get(token1);               //GET FROM HASHTABLE
                 return hitList;
             }
 
             return intersectPhrase(intersect(postLists));
         }
         else if(queryType == Index.INTERSECTION_QUERY){                 //INTERSECTION QUERY
-            if(nrOfTerms == 1){
+            if(nrOfTerms == 1){                                         //IF ONE TERM
                 String token1 = query.terms.get(0);
-                PostingsList hitList = index.get(token1);
+                PostingsList hitList = index.get(token1);               //GET FROM HASHTABLE
                 return hitList;
             }
 
@@ -203,8 +202,6 @@ public class HashedIndex implements Index {
     public boolean hasInteger(int targetIn, ArrayList<Integer> listIn, int[] pointers, int pointer){
         int size = listIn.size();
         for(int i=pointers[pointer];i<size;i++){                                                            //BORJA FROM NOLL = NO PROBLEM
-iterations++;
-System.out.println("ITERATIONS: "+iterations);
             if(listIn.get(i) == targetIn){
                 pointers[pointer] = i;          //NEW
                 return true;

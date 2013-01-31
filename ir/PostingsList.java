@@ -86,13 +86,9 @@ public class PostingsList implements Serializable {
                 return;
             }
         }
-//System.out.println("SIZE: "+list.size());
         Pointer pointer = new Pointer(list.size());
-//System.out.println("VALUE: "+pointer.value);
 
         while(true){
-//        System.out.println("BAJSKORV");
-//        System.out.println("listsize: "+list.size());
             if(entryIn.docID == list.get(pointer.value-1).docID){           //IF POINTING AT SAME DOCUMENT
                 (list.get(pointer.value-1)).addPosition((entryIn.positions).get(0));
                 break;
@@ -165,26 +161,12 @@ public class PostingsList implements Serializable {
         public void right(){
             setNextJump();
             value = value+jump;
-   //     System.out.println("jump: "+jump);
-   //     System.out.println("value: "+value);
             nrOfJumps++;
-            //if(value>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
-            //if(value<1){ value = 1; }
-            //if(jump<1){ jump = 1; }
-            //value = value+jump;
-            //nrOfJumps++;
         }
         public void left(){
             setNextJump();
             value = value-jump;
-  //      System.out.println("jump: "+jump);
- //       System.out.println("value: "+value);
             nrOfJumps++;
-            //if(value>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
-            //if(value<1){ value = 1; }
-            //if(jump<1){ jump = 1; }
-            //value = value-jump;
-            //nrOfJumps++;
         }
         public void setNextJump(){
             if(jump>1){ jump = startValue/(FUCKYOUJAVA(2,nrOfJumps)); }
