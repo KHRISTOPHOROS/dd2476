@@ -41,12 +41,12 @@ public class Indexer {
 
     /** Generates a new document identifier as an integer. */
     private int generateDocID() {
-	return lastDocID++;
+        return lastDocID++;
     }
 
     /** Generates a new document identifier based on the file name. */
     private int generateDocID( String s ) {
-	return s.hashCode();
+        return s.hashCode();
     }
 
 
@@ -57,14 +57,14 @@ public class Indexer {
      *  Initializes the index as a HashedIndex.
      */
     public Indexer() {
-	index = new HashedIndex();
+        index = new HashedIndex();
     }
 
     /** 
      *  Initializes the index as a MegaIndex.
      */
     public Indexer( LinkedList<String> indexfiles ) {
-	index = new MegaIndex( indexfiles );
+        index = new MegaIndex( indexfiles );
     }
 
 
@@ -79,42 +79,43 @@ public class Indexer {
 	// do not try to index fs that cannot be read
 	if ( f.canRead() ) {
 	    if ( f.isDirectory() ) {
-		String[] fs = f.list();
-		// an IO error could occur
-		if ( fs != null ) {
-		    for ( int i=0; i<fs.length; i++ ) {
-			processFiles( new File( f, fs[i] ));
-		    }
-		}
-	    } else {
-		System.err.println( "Indexing " + f.getPath() );
-		// First register the document and get a docID
-		int docID;
-		if ( index instanceof HashedIndex ) {
-		    // For HashedIndex, use integers.
-		    docID = generateDocID();
-		}
+            String[] fs = f.list();
+            // an IO error could occur
+            if ( fs != null ) {
+                for ( int i=0; i<fs.length; i++ ) {
+                    processFiles( new File( f, fs[i] ));
+                }
+            }
+	    }
+        else {
+            System.err.println( "Indexing " + f.getPath() );
+            // First register the document and get a docID
+            int docID;
+            if ( index instanceof HashedIndex ) {
+                // For HashedIndex, use integers.
+                docID = generateDocID();
+            }
 		else {
 		    // For MegaIndex, use hash codes based on file names.
 		    try {
-			docID = generateDocID( f.getCanonicalPath() );
+                docID = generateDocID( f.getCanonicalPath() );
 		    }
 		    catch( IOException e ) {
-			docID = generateDocID( f.getPath() );
+                docID = generateDocID( f.getPath() );
 		    }
 		}
-		index.docIDs.put( "" + docID, f.getPath() );
+            index.docIDs.put( "" + docID, f.getPath() );
 		try {
 		    //  Read the first few bytes of the file to see if it is 
 		    // likely to be a PDF 
 		    Reader reader = new FileReader( f );
 		    char[] buf = new char[4];
 		    reader.read( buf, 0, 4 );
-		    if ( buf[0] == '%' && buf[1]=='P' && buf[2]=='D' && buf[3]=='F' ) {
-			// We assume this is a PDF file
-			try {
-			    String contents = extractPDFContents( f );
-			    reader = new StringReader( contents );
+            if ( buf[0] == '%' && buf[1]=='P' && buf[2]=='D' && buf[3]=='F' ) {
+            // We assume this is a PDF file
+            try {
+                    String contents = extractPDFContents( f );
+                    reader = new StringReader( contents );
 			}
 			catch ( IOException e ) {
 			    // Perhaps it wasn't a PDF file after all
@@ -122,13 +123,13 @@ public class Indexer {
 			}
 		    }
 		    else {
-			// We hope this is ordinary text
-			reader = new FileReader( f );
+                // We hope this is ordinary text
+                reader = new FileReader( f );
 		    }
 		    SimpleTokenizer tok = new SimpleTokenizer( reader );
 		    int offset = 0;
 		    while ( tok.hasMoreTokens() ) {
-			insertIntoIndex( docID, tok.nextToken(), offset++ );
+                insertIntoIndex( docID, tok.nextToken(), offset++ );
 		    }
 		    index.docLengths.put( "" + docID, offset );
 		    reader.close();

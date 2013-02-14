@@ -86,11 +86,21 @@ public class HashedIndex implements Index {
 
             return intersect(postLists).get(0);
         }
+        else if(queryType == Index.RANKED_QUERY){
+            if(nrOfTerms == 1){
+                String token1 = query.terms.get(0);
+                PostingsList hitList = index.get(token1);
+                return hitList;
+            }
+
+            return rankedRetrieval(intersect(postLists));
+        }
 
         System.out.println("RETURN OF NULL WAS REACHED!");
         return null;
     }
 
+    //RETURNS ONE PostingsList FOR EACH WORD, CONTAINING ALL PostingsEntrys (DocIDs) THAT THAT WORD (AND THE OTHER WANTED WORDS) OCCURED IN
     public ArrayList<PostingsList> intersect(ArrayList<PostingsList> postListsIn){
         //PostingsList postingsOut = new PostingsList();                  //THE POSTINGS TO RETURN
         int nrOfPointers = postListsIn.size();
@@ -197,6 +207,12 @@ public class HashedIndex implements Index {
             pointers = resetPointers(pointers);                     //RESET POINTERS FOR NEXT DOCUMENTCHECK
         }
     return output;
+    }
+
+    public postingsList rankedRetrieval(ArrayList<PostingsList> postListsIn){
+
+
+
     }
 
     public boolean hasInteger(int targetIn, ArrayList<Integer> listIn, int[] pointers, int pointer){
