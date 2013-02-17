@@ -222,6 +222,8 @@ public class HashedIndex implements Index {
             for(int j=0;j<postListsIn.get(i).size();j++){                   //FOR EACH PostingsEntry
                 if(!docIDs.containsValue(postListsIn.get(i).get(j).docID)){;//IF NOT ALREADY ADDED
                     index++;
+                System.out.println("docID: "+postListsIn.get(i).get(j).docID);
+                System.out.println("index: "+index);
                     docIDs.put(index,postListsIn.get(i).get(j).docID);      //ADD docID
                     getIndex.put(postListsIn.get(i).get(j).docID,index);
                     docs.put(index,postListsIn.get(i).get(j));
@@ -247,8 +249,8 @@ public class HashedIndex implements Index {
         for(int col=0;col<cols;col++){
             for(int row=0;row<rows;row++){          //TERM-FREQUENCY -> LOG FREQUENCY
                 if(matrix[row][col] > 0){
-                    matrix[row][col] = 1 + Math.log(matrix[row][col]) / Math.log(10);   //GIVEN FORMULA
-                    matrix[row][col] = matrix[row][col] * idf[row];                      //tf --> tf-idf
+                    //matrix[row][col] = 1 + Math.log(matrix[row][col]) / Math.log(10);   //GIVEN FORMULA
+                    //matrix[row][col] = matrix[row][col] * idf[row];                      //tf --> tf-idf
                     sumOfSquares[col] += Math.pow(matrix[row][col],2);                  //SUMMING SQUARES OF ALL ELEMENTS
                 }
             }
@@ -258,7 +260,7 @@ public class HashedIndex implements Index {
         //LETS NORMALIZE THE WHOLE MATRIX!!!
         for(int col=0;col<cols;col++){
             for(int row=0;row<rows;row++){
-                matrix[row][col] = matrix[row][col] / sumOfSquares[col];
+                //matrix[row][col] = matrix[row][col] / sumOfSquares[col];
             }
         }                   //MATRIX SHOULD NOW BE NORMALIZED.. YEY!!!
 
@@ -286,13 +288,13 @@ public class HashedIndex implements Index {
         }
 
 
-        Collections.sort(output.list);
+//        Collections.sort(output.list);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
- for(int i=0;i<cols;i++){ System.out.print(sumOfSquares[i]+" "); }
+ //for(int i=0;i<cols;i++){ System.out.print(sumOfSquares[i]+" "); }
  System.out.println();
 
-        System.out.println("idf.size(): "+idf.length);
-        for(int i=0;i<rows;i++){ System.out.println(idf[i]); }
+        //System.out.println("idf.size(): "+idf.length);
+        //for(int i=0;i<rows;i++){ System.out.println(idf[i]); }
         //FOR PRINTING                                                             //UNNECESSARY CRAP!!!!!!!!!!!!!
         for(int row=0;row<rows;row++){                                              //ALL OF IT!
             for(int col=0;col<cols;col++){
