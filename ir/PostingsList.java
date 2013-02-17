@@ -18,7 +18,7 @@ import java.lang.Math;
 public class PostingsList implements Serializable {
     
     /** The postings list as a linked list. */
-    private LinkedList<PostingsEntry> list = new LinkedList<PostingsEntry>();
+    public LinkedList<PostingsEntry> list = new LinkedList<PostingsEntry>();
 
     /**  Number of postings in this list  */
     public int size() {
@@ -75,6 +75,8 @@ public class PostingsList implements Serializable {
         if(list.size() == 1){
             if(entryIn.docID == list.get(0).docID){           //IF POINTING AT SAME DOCUMENTA
                 (list.get(0)).addPosition((entryIn.positions).get(0));
+                //(list.get(0)).score++;                          //NEW
+                (list.get(0)).tf++;                                 //NEWER
                 return;
             }
             if(entryIn.docID > list.get(0).docID){
@@ -91,6 +93,8 @@ public class PostingsList implements Serializable {
         while(true){
             if(entryIn.docID == list.get(pointer.value-1).docID){           //IF POINTING AT SAME DOCUMENT
                 (list.get(pointer.value-1)).addPosition((entryIn.positions).get(0));
+                //(list.get(pointer.value-1)).score++;                        //NEW
+                (list.get(pointer.value-1)).tf++;                             //NEWER
                 break;
             }
             if(pointer.value-1 == 0){                                       //IF POINTER == FIRST

@@ -13,6 +13,8 @@ package ir;
 import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  *   Implements an inverted index as a Hashtable from words to PostingsLists.
@@ -92,8 +94,7 @@ public class HashedIndex implements Index {
                 PostingsList hitList = index.get(token1);
                 return hitList;
             }
-
-            return rankedRetrieval(intersect(postLists));
+            return rankedRetrieval(postLists);
         }
 
         System.out.println("RETURN OF NULL WAS REACHED!");
@@ -209,10 +210,106 @@ public class HashedIndex implements Index {
     return output;
     }
 
-    public postingsList rankedRetrieval(ArrayList<PostingsList> postListsIn){
+    //WHAT IF QUERY CONTAINS SAME TERM MORE THAN ONCE????????????????????????????????????? I HAVE NO IDEA?!!!!! BATMAN!
+                    //df_t = DOCUMENT FREQUENCY = NUMBER OF DOCUMENTS IN COLLECTION THAT CONTAINS TERM t
+    public PostingsList rankedRetrieval(ArrayList<PostingsList> postListsIn){
+        HashMap<Integer,Integer> docIDs = new HashMap<Integer,Integer>();   //FOR COUNTING docIDs
+        HashMap<Integer,PostingsEntry> docs = new HashMap<Integer,PostingsEntry>();     //FOR KEEPING DOCUMENTS AVAILABLE FOR OUTPUT
+        HashMap<Integer,Integer> getIndex = new HashMap<Integer,Integer>(); //FOR GETTING INDEX IN MATRIX
+
+        int index = -1;         //EACH docID NEEDS A KEY. index WILL BE THE NUMBER OF docIDs EVENTUALLY
+        for(int i=0;i<postListsIn.size();i++){                              //FOR EACH PostingsList
+            for(int j=0;j<postListsIn.get(i).size();j++){                   //FOR EACH PostingsEntry
+                if(!docIDs.containsValue(postListsIn.get(i).get(j).docID)){;//IF NOT ALREADY ADDED
+                    index++;
+                    docIDs.put(index,postListsIn.get(i).get(j).docID);      //ADD docID
+                    getIndex.put(postListsIn.get(i).get(j).docID,index);
+                    docs.put(index,postListsIn.get(i).get(j));
+                }
+            }
+        }
+        int rows = postListsIn.size();
+        int cols = index+1;                                      //+1 SINCE index=n MEANS n+1 DOCUMENTS
+
+        double[][] matrix = new double[rows][cols];                 //THE MATRIX!!11!!
+        double[] idf = new double[rows];                            //INVERSE DOCUMENT FREQUENCIES
+        
+        for(int i=0;i<postListsIn.size();i++){                      //FOR EACH PostingsList (TERM)
+            idf[i] = Math.log((double)cols/postListsIn.get(i).size())/Math.log(10);      //(ADD NR OF DOCUMENTS TO docfreqs)
+            for(int j=0;j<postListsIn.get(i).size();j++){           //FOR EACH PostingsEntry (DOCUMENT)
+                int tempID = postListsIn.get(i).get(j).docID;
+                int tempScore = postListsIn.get(i).get(j).tf;
+                matrix[i][getIndex.get(tempID)] = tempScore;        //ADD DOCUMENT SCORE TO MATRIX
+            }
+        }
+
+        double[] sumOfSquares = new double[cols];                   //FOR NORMALIZING LATER
+        for(int col=0;col<cols;col++){
+            for(int row=0;row<rows;row++){          //TERM-FREQUENCY -> LOG FREQUENCY
+                if(matrix[row][col] > 0){
+                    matrix[row][col] = 1 + Math.log(matrix[row][col]) / Math.log(10);   //GIVEN FORMULA
+                    matrix[row][col] = matrix[row][col] * idf[row];                      //tf --> tf-idf
+                    sumOfSquares[col] += Math.pow(matrix[row][col],2);                  //SUMMING SQUARES OF ALL ELEMENTS
+                }
+            }
+            sumOfSquares[col] = Math.sqrt(sumOfSquares[col]);                                //SQURTING SQUARES OF ALL EMELEMNTS
+        }                   //MATRIX SHOULD NOW BE FILLED WITH tf-idf VALUES... YAY!!
+        
+        //LETS NORMALIZE THE WHOLE MATRIX!!!
+        for(int col=0;col<cols;col++){
+            for(int row=0;row<rows;row++){
+                matrix[row][col] = matrix[row][col] / sumOfSquares[col];
+            }
+        }                   //MATRIX SHOULD NOW BE NORMALIZED.. YEY!!!
+
+        //CREATE tf-idf VECOR FOR QUERY
+        double[] query = new double[rows];
+        Arrays.fill(query,1);                                   //FILL QUERY WITH ONES; IT COINTAINS EACH TERM ONCE.. (RIGHT?)              BATMAN
+
+        for(int i=0;i<rows;i++){
+            query[i] = query[i] * Math.log(cols/postListsIn.get(i).size()) / Math.log(10);      //tf -> tf*idf
+        }
+
+        double[] scores = new double[cols];
+        for(int col=0;col<cols;col++){
+            for(int row=0;row<rows;row++){
+                scores[col] += query[row] * matrix[row][col];
+            }
+        }
+
+        //CREATE PostingsList CONTAINING PostingsEntrys SORTED ACCORDING TO scores
+        PostingsList output = new PostingsList();
+
+        for(int col=0;col<cols;col++){
+            docs.get(col).score = scores[col];                                      //GIVE EACH DOCUMENT ITS SCORE SO IT CAN BE SORTED
+            output.add(docs.get(col));                                              //ADD ALL DOCUMENTS TO THE OUTPUT
+        }
 
 
+        Collections.sort(output.list);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ for(int i=0;i<cols;i++){ System.out.print(sumOfSquares[i]+" "); }
+ System.out.println();
 
+        System.out.println("idf.size(): "+idf.length);
+        for(int i=0;i<rows;i++){ System.out.println(idf[i]); }
+        //FOR PRINTING                                                             //UNNECESSARY CRAP!!!!!!!!!!!!!
+        for(int row=0;row<rows;row++){                                              //ALL OF IT!
+            for(int col=0;col<cols;col++){
+                System.out.print(matrix[row][col]+" ");
+            }
+            System.out.println("");
+        }
+
+
+        //create matrix: col = length(docIDs), row = nrOfTerms+2?   docID   7  132  84  95  8  74  35
+        //                                                          wizard  3   2   1   8   0   0   1
+        //                                                          warlock 0   0   13  7   3   0   0
+        //                                                          mageiy  12  11  15  9   0   3   0  
+        //                                                          WEIGHTS 15  13  29  24  3   3   1
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        return output;
     }
 
     public boolean hasInteger(int targetIn, ArrayList<Integer> listIn, int[] pointers, int pointer){

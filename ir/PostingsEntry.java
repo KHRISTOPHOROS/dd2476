@@ -15,6 +15,7 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     
     public int docID;
     public double score;
+    public int tf;
     public ArrayList<Integer> positions = new ArrayList<Integer>();
 
     /**
@@ -34,6 +35,11 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     public PostingsEntry(int docIDIn, int positionIn){
         docID = docIDIn;
         positions.add(positionIn);
+        tf = 1;
+    }
+    public PostingsEntry(int docIDIn, double scoreIn){
+        docID = docIDIn;
+        score = scoreIn;
     }
 
     public void addPosition(int positionIn){
