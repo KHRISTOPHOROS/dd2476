@@ -25,6 +25,8 @@ public class MegaIndex implements Index {
      *	memory if necessary. 
      */
     private MegaMap index;
+    public HashMap<Integer,Integer> nrOfWords = new HashMap<Integer,Integer>();
+    public int nrOfDocs = 0;
 
 
     /** 
@@ -326,10 +328,10 @@ public class MegaIndex implements Index {
     public PostingsList intersectPhrase(ArrayList<PostingsList> termsIn){
         PostingsList output = new PostingsList();
         int nrOfTerms = termsIn.size();
-        int nrOfDocs = (termsIn.get(0)).size();
+        int nrOfPosts = (termsIn.get(0)).size();
         PostingsList term0 = termsIn.get(0);                        //FOR THE FIRST TERM
 
-        for(int i=0;i<nrOfDocs;i++){                                //FOR ALL DOCUMENTS
+        for(int i=0;i<nrOfPosts;i++){                                //FOR ALL DOCUMENTS
             PostingsEntry tempDoc0 = term0.get(i);                  //THE DOCUMENT TO ANALYZE
             boolean foundPhrase = false;
 
@@ -378,6 +380,12 @@ public class MegaIndex implements Index {
         else{
             return false;
         }
+    }
+    public void nrOfDocs(int nrOfDocsIn){
+        nrOfDocs = nrOfDocsIn;
+    }
+    public void nrOfWords(int docIDIn, int nrOfWordsIn){
+        nrOfWords.put(docIDIn,nrOfWordsIn);
     }
 }
 

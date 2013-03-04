@@ -1,0 +1,2 @@
+javac PageRank.java
+java PageRank ../svwiki_links/links1000.txt

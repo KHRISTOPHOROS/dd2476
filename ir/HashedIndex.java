@@ -22,7 +22,8 @@ import java.util.Collections;
 public class HashedIndex implements Index {
     /** The index as a hashtable. */
     private HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
-
+    public int nrOfDocs = 0;
+    public HashMap<Integer,Integer> nrOfWords = new HashMap<Integer,Integer>();
 
     /**
      *  Inserts this token in the index.
@@ -59,6 +60,7 @@ public class HashedIndex implements Index {
 	// 
 	//  REPLACE THE STATEMENT BELOW WITH YOUR CODE
 	//
+
         int nrOfTerms = query.terms.size();
         ArrayList<PostingsList> postLists = new ArrayList<PostingsList>();
 
@@ -89,11 +91,11 @@ public class HashedIndex implements Index {
             return intersect(postLists).get(0);
         }
         else if(queryType == Index.RANKED_QUERY){
-            if(nrOfTerms == 1){
-                String token1 = query.terms.get(0);
-                PostingsList hitList = index.get(token1);
-                return hitList;
-            }
+        //    if(nrOfTerms == 1){
+        //        String token1 = query.terms.get(0);
+        //        PostingsList hitList = index.get(token1);
+        //        return hitList;
+        //    }
             return rankedRetrieval(postLists);
         }
 
@@ -179,11 +181,11 @@ public class HashedIndex implements Index {
     public PostingsList intersectPhrase(ArrayList<PostingsList> termsIn){
         PostingsList output = new PostingsList();
         int nrOfTerms = termsIn.size();
-        int nrOfDocs = (termsIn.get(0)).size();
+        int nrOfPostings = (termsIn.get(0)).size();
         int[] pointers = new int[nrOfTerms];
         PostingsList term0 = termsIn.get(0);                        //FOR THE FIRST TERM
 
-        for(int i=0;i<nrOfDocs;i++){                                //FOR ALL DOCUMENTS
+        for(int i=0;i<nrOfPostings;i++){                            //FOR ALL DOCUMENTS
             PostingsEntry tempDoc0 = term0.get(i);                  //THE DOCUMENT TO ANALYZE
             boolean foundPhrase = false;
 
@@ -222,8 +224,6 @@ public class HashedIndex implements Index {
             for(int j=0;j<postListsIn.get(i).size();j++){                   //FOR EACH PostingsEntry
                 if(!docIDs.containsValue(postListsIn.get(i).get(j).docID)){;//IF NOT ALREADY ADDED
                     index++;
-                System.out.println("docID: "+postListsIn.get(i).get(j).docID);
-                System.out.println("index: "+index);
                     docIDs.put(index,postListsIn.get(i).get(j).docID);      //ADD docID
                     getIndex.put(postListsIn.get(i).get(j).docID,index);
                     docs.put(index,postListsIn.get(i).get(j));
@@ -237,40 +237,50 @@ public class HashedIndex implements Index {
         double[] idf = new double[rows];                            //INVERSE DOCUMENT FREQUENCIES
         
         for(int i=0;i<postListsIn.size();i++){                      //FOR EACH PostingsList (TERM)
-            idf[i] = Math.log((double)cols/postListsIn.get(i).size())/Math.log(10);      //(ADD NR OF DOCUMENTS TO docfreqs)
+            idf[i] = Math.log((double)nrOfDocs/(double)postListsIn.get(i).size())/Math.log(10);      //(ADD NR OF DOCUMENTS TO docfreqs)
             for(int j=0;j<postListsIn.get(i).size();j++){           //FOR EACH PostingsEntry (DOCUMENT)
                 int tempID = postListsIn.get(i).get(j).docID;
                 int tempScore = postListsIn.get(i).get(j).tf;
                 matrix[i][getIndex.get(tempID)] = tempScore;        //ADD DOCUMENT SCORE TO MATRIX
             }
         }
-
-        double[] sumOfSquares = new double[cols];                   //FOR NORMALIZING LATER
-        for(int col=0;col<cols;col++){
-            for(int row=0;row<rows;row++){          //TERM-FREQUENCY -> LOG FREQUENCY
-                if(matrix[row][col] > 0){
-                    //matrix[row][col] = 1 + Math.log(matrix[row][col]) / Math.log(10);   //GIVEN FORMULA
-                    //matrix[row][col] = matrix[row][col] * idf[row];                      //tf --> tf-idf
-                    sumOfSquares[col] += Math.pow(matrix[row][col],2);                  //SUMMING SQUARES OF ALL ELEMENTS
-                }
+//OK
+    System.out.println();
+        for(int row=0;row<rows;row++){
+            for(int col=0;col<cols;col++){
+                System.out.print(matrix[row][col]+" ");
             }
-            sumOfSquares[col] = Math.sqrt(sumOfSquares[col]);                                //SQURTING SQUARES OF ALL EMELEMNTS
-        }                   //MATRIX SHOULD NOW BE FILLED WITH tf-idf VALUES... YAY!!
-        
-        //LETS NORMALIZE THE WHOLE MATRIX!!!
+            System.out.println();
+        }
+//           matrix[row][col] = 1 + Math.log(matrix[row][col]) / Math.log(10);   //GIVEN FORMULA
+
+        //for(int col=0;col<cols;col++){
+        //    for(int row=0;row<rows;row++){
+        //        if(matrix[row][col] != 0){
+        //            matrix[row][col] = 1 + Math.log(matrix[row][col]) / Math.log(10);
+        //        }
+        //    }
+        //}
+
+        //tf --> tf-idf
         for(int col=0;col<cols;col++){
             for(int row=0;row<rows;row++){
-                //matrix[row][col] = matrix[row][col] / sumOfSquares[col];
+                matrix[row][col] = matrix[row][col] * idf[row];
             }
-        }                   //MATRIX SHOULD NOW BE NORMALIZED.. YEY!!!
+        } 
+
+        matrix = normalize(matrix,docIDs);
 
         //CREATE tf-idf VECOR FOR QUERY
         double[] query = new double[rows];
         Arrays.fill(query,1);                                   //FILL QUERY WITH ONES; IT COINTAINS EACH TERM ONCE.. (RIGHT?)              BATMAN
 
         for(int i=0;i<rows;i++){
-            query[i] = query[i] * Math.log(cols/postListsIn.get(i).size()) / Math.log(10);      //tf -> tf*idf
+            query[i] = query[i] * Math.log((double)nrOfDocs/(double)postListsIn.get(i).size()) / Math.log(10);      //tf -> tf*idf
         }
+
+        //query = normalize(query);
+        //query = normalize(query,docIDs);
 
         double[] scores = new double[cols];
         for(int col=0;col<cols;col++){
@@ -288,13 +298,9 @@ public class HashedIndex implements Index {
         }
 
 
-//        Collections.sort(output.list);
+        Collections.sort(output.list);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
- //for(int i=0;i<cols;i++){ System.out.print(sumOfSquares[i]+" "); }
  System.out.println();
-
-        //System.out.println("idf.size(): "+idf.length);
-        //for(int i=0;i<rows;i++){ System.out.println(idf[i]); }
         //FOR PRINTING                                                             //UNNECESSARY CRAP!!!!!!!!!!!!!
         for(int row=0;row<rows;row++){                                              //ALL OF IT!
             for(int col=0;col<cols;col++){
@@ -302,8 +308,10 @@ public class HashedIndex implements Index {
             }
             System.out.println("");
         }
-
-
+        System.out.println();
+        for(int col=0;col<cols;col++){
+            System.out.print(scores[col]+" ");
+        }
         //create matrix: col = length(docIDs), row = nrOfTerms+2?   docID   7  132  84  95  8  74  35
         //                                                          wizard  3   2   1   8   0   0   1
         //                                                          warlock 0   0   13  7   3   0   0
@@ -312,6 +320,67 @@ public class HashedIndex implements Index {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         return output;
+    }
+
+    public double[][] normalize(double[][] matrixIn, HashMap<Integer,Integer> docIDs){
+        int cols = matrixIn[0].length;
+        int rows = matrixIn.length;
+
+        for(int col=0;col<cols;col++){
+            for(int row=0;row<rows;row++){
+                matrixIn[row][col] = matrixIn[row][col] / nrOfWords.get(docIDs.get(col));
+            }
+        }
+        return matrixIn;
+    }
+
+    public double[] normalize(double[] vectorIn, HashMap<Integer,Integer> docIDs){
+        int units = vectorIn.length;
+
+        for(int unit=0;unit<units;unit++){
+            vectorIn[unit] = vectorIn[unit] / nrOfWords.get(docIDs.get(unit));
+        }
+        return vectorIn;
+    }
+
+    public double[][] normalize(double[][] matrixIn){
+        int cols = matrixIn[0].length;
+        int rows = matrixIn.length;
+        double[] sumOfSquares = new double[cols];
+
+        for(int col=0;col<cols;col++){
+            for(int row=0;row<rows;row++){
+                sumOfSquares[col] += Math.pow(matrixIn[row][col],2);
+            }
+            sumOfSquares[col] = Math.sqrt(sumOfSquares[col]);
+        }
+
+        for(int col=0;col<cols;col++){
+            for(int row=0;row<rows;row++){
+                if(sumOfSquares[col] != 0){
+                    matrixIn[row][col] = matrixIn[row][col] / sumOfSquares[col];
+                }
+            }
+        }
+
+        return matrixIn;
+    }
+
+    public double[] normalize(double[] vectorIn){
+        int units = vectorIn.length;
+        double sumOfSquares = 0;
+
+        for(int unit=0;unit<units;unit++){
+            sumOfSquares += Math.pow(vectorIn[unit],2);
+        }
+        sumOfSquares = Math.sqrt(sumOfSquares);
+
+        for(int unit=0;unit<units;unit++){
+            if(sumOfSquares != 0)
+                vectorIn[unit] = vectorIn[unit] / sumOfSquares;
+        }
+
+        return vectorIn;
     }
 
     public boolean hasInteger(int targetIn, ArrayList<Integer> listIn, int[] pointers, int pointer){
@@ -355,5 +424,12 @@ public class HashedIndex implements Index {
      *  No need for cleanup in a HashedIndex.
      */
     public void cleanup() {
+    }
+
+    public void nrOfDocs(int nrOfDocsIn){
+        nrOfDocs = nrOfDocsIn;
+    }
+    public void nrOfWords(int docIDIn, int nrOfWordsIn){
+        nrOfWords.put(docIDIn,nrOfWordsIn);
     }
 }

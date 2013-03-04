@@ -36,5 +36,7 @@ public interface Index {
     public PostingsList search( Query query, int queryType, int rankingType );
     public void cleanup();
 
+    public void nrOfDocs(int nrOfDocsIn);
+    public void nrOfWords(int docIDIn, int nrOfWordsIn);
 }
 		    

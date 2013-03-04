@@ -22,6 +22,7 @@ import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.pdfparser.*;
 import org.apache.pdfbox.util.PDFTextStripper;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import java.util.HashMap;
 
 
 /**
@@ -34,6 +35,9 @@ public class Indexer {
     
     /** The next docID to be generated. */
     private int lastDocID = 0;
+    public int nrOfWords = 0;
+    public int nrOfDocs = 0;
+    public HashMap<String,Boolean> wordFound = new HashMap<String,Boolean>();
 
 
     /* ----------------------------------------------- */
@@ -41,6 +45,7 @@ public class Indexer {
 
     /** Generates a new document identifier as an integer. */
     private int generateDocID() {
+        nrOfDocs++;
         return lastDocID++;
     }
 
@@ -129,8 +134,10 @@ public class Indexer {
 		    SimpleTokenizer tok = new SimpleTokenizer( reader );
 		    int offset = 0;
 		    while ( tok.hasMoreTokens() ) {
+                nrOfWords++;                                                    //MINE
                 insertIntoIndex( docID, tok.nextToken(), offset++ );
 		    }
+            nrOfWords = 0;                                                    //MINE
 		    index.docLengths.put( "" + docID, offset );
 		    reader.close();
 		}
@@ -149,14 +156,14 @@ public class Indexer {
      *  Extracts the textual contents from a PDF file as one long string.
      */
     public String extractPDFContents( File f ) throws IOException {
-	FileInputStream fi = new FileInputStream( f );
-	PDFParser parser = new PDFParser( fi );   
-	parser.parse();   
-	fi.close();
-	COSDocument cd = parser.getDocument();   
-	PDFTextStripper stripper = new PDFTextStripper();   
-	String result = stripper.getText( new PDDocument( cd ));  
-	cd.close();
+        FileInputStream fi = new FileInputStream( f );
+        PDFParser parser = new PDFParser( fi );   
+        parser.parse();   
+        fi.close();
+        COSDocument cd = parser.getDocument();   
+        PDFTextStripper stripper = new PDFTextStripper();   
+        String result = stripper.getText( new PDDocument( cd ));  
+        cd.close();
 	return result;
     }
 
@@ -168,7 +175,10 @@ public class Indexer {
      *  Indexes one token.
      */
     public void insertIntoIndex( int docID, String token, int offset ) {
-	index.insert( token, docID, offset );
+        index.nrOfDocs(nrOfDocs);                                               //MINE
+        index.nrOfWords(docID, nrOfWords);                                      //MINE
+
+        index.insert( token, docID, offset );
     }
 }
 	
